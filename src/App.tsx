@@ -1,4 +1,9 @@
-import { createMuiTheme, CssBaseline, ThemeProvider } from "@material-ui/core";
+import {
+  Container,
+  createMuiTheme,
+  CssBaseline,
+  ThemeProvider,
+} from "@material-ui/core";
 import React from "react";
 import { Provider } from "react-redux";
 import { applyMiddleware, createStore } from "redux";
@@ -32,8 +37,10 @@ export const AppWrapper: React.FC<{ initialState?: State }> = ({
 function App() {
   return (
     <AppWrapper>
-      <AppBar />
-      <CardList />
+      <Container>
+        <AppBar />
+        <CardList />
+      </Container>
     </AppWrapper>
   );
 }

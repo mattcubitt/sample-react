@@ -40,6 +40,7 @@ interface SearchState {
   results: SearchResult[];
   error: string | null;
   loading: boolean;
+  pageNumber: number;
 }
 
 export interface State {
@@ -49,6 +50,10 @@ export interface State {
 export type Actions =
   | { type: "SEARCH/SET_QUERY"; payload: { query: string } }
   | { type: "SEARCH/SET_SEARCH_RESULTS"; payload: { results: SearchResult[] } }
+  | {
+      type: "SEARCH/APPEND_SEARCH_RESULTS";
+      payload: { results: SearchResult[] };
+    }
   | { type: "SEARCH/SET_ERROR"; payload: { message: string } }
   | { type: "SEARCH/SET_LOADING"; payload: { loading: boolean } };
 
@@ -57,6 +62,7 @@ export type SearchDispatch = ThunkDispatch<State, any, Actions>;
 const initialSearchState: SearchState = {
   query: "",
   results: [],
+  pageNumber: 0,
   error: null,
   loading: false,
 };
@@ -69,7 +75,19 @@ const searchReducer = (
     case "SEARCH/SET_QUERY":
       return { ...state, query: action.payload.query };
     case "SEARCH/SET_SEARCH_RESULTS":
-      return { ...state, results: action.payload.results, error: null };
+      return {
+        ...state,
+        results: action.payload.results,
+        error: null,
+        pageNumber: 1,
+      };
+    case "SEARCH/APPEND_SEARCH_RESULTS":
+      return {
+        ...state,
+        results: [...state.results, ...action.payload.results],
+        error: null,
+        pageNumber: state.pageNumber + 1,
+      };
     case "SEARCH/SET_ERROR":
       return { ...state, error: action.payload.message };
     case "SEARCH/SET_LOADING":

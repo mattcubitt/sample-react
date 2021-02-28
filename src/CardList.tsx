@@ -1,31 +1,62 @@
 import { Box, Grid, Typography } from "@material-ui/core";
-import React from "react";
-import { useSelector } from "react-redux";
+import debounce from "lodash.debounce";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchSearchResults } from "./actions";
 import { Card } from "./Card";
-import { searchResultsSelector, errorSelector } from "./selectors";
+import { SearchDispatch } from "./reducers";
+import {
+  searchResultsSelector,
+  errorSelector,
+  searchQuerySelector,
+  pageNumberSelector,
+} from "./selectors";
+import { getIsScrollbarAtBottom, getIsScrollbarVisible } from "./utils";
 
 export const CardList = () => {
   const searchResults = useSelector(searchResultsSelector);
   const error = useSelector(errorSelector);
+  const searchQuery = useSelector(searchQuerySelector);
+  const pageNumber = useSelector(pageNumberSelector);
+  const dispatch: SearchDispatch = useDispatch();
 
-  if (error) {
-    return (
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        height="100%"
-        flex="1"
-        mt={8}
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Typography variant="h1">
-          An error has occurred. Please try again.
-        </Typography>
-        <Typography variant="body1">{error}</Typography>
-      </Box>
-    );
-  }
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // trigger debounced fetch if scrollbar hits bottom of page
+  useEffect(() => {
+    const onScrollHandler = debounce(() => {
+      if (isLoadingMore) {
+        return;
+      }
+      const isAtBottom = getIsScrollbarAtBottom();
+      if (isAtBottom) {
+        setIsLoadingMore(true);
+        if (!isLoadingMore) {
+          dispatch(fetchSearchResults(searchQuery, pageNumber, true)).then(
+            () => {
+              setIsLoadingMore(false);
+            }
+          );
+        }
+      }
+    }, 500);
+    window.addEventListener("scroll", onScrollHandler);
+
+    return () => window.removeEventListener("scroll", onScrollHandler);
+  }, [isLoadingMore, dispatch, pageNumber, searchQuery]);
+
+  // trigger extra fetch if scrollbar isn't present
+  useLayoutEffect(() => {
+    const isScrollBarVisible = getIsScrollbarVisible();
+
+    if (searchResults.length > 0 && !isScrollBarVisible) {
+      if (!isLoadingMore) {
+        dispatch(fetchSearchResults(searchQuery, pageNumber, true)).then(() => {
+          setIsLoadingMore(false);
+        });
+      }
+    }
+  }, [dispatch, isLoadingMore, pageNumber, searchQuery, searchResults.length]);
 
   return (
     <Box mt={8}>
@@ -34,15 +65,21 @@ export const CardList = () => {
           <Typography variant="h1">
             An error has occurred. Please try again.
           </Typography>
-          <Typography variant="body1">{error}</Typography>{" "}
+          <Typography variant="body1">{error}</Typography>
         </>
       ) : (
         <Grid container role="list">
-          {searchResults.map((searchResult) => (
-            <Grid key={searchResult.trackId} item xs={3}>
-              <Card searchResult={searchResult} />
-            </Grid>
-          ))}
+          {searchResults.map((searchResult, index) => {
+            return (
+              <Grid
+                key={`${index}_${searchResult.artistId}_${searchResult.collectionId}_${searchResult.trackId}`}
+                item
+                xs={3}
+              >
+                <Card searchResult={searchResult} />
+              </Grid>
+            );
+          })}
         </Grid>
       )}
     </Box>

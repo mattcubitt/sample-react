@@ -2,8 +2,20 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { AppWrapper } from "./App";
 import AppBar from "./AppBar";
+import { getSearchUrl } from "./actions";
+import userEvent from "@testing-library/user-event";
+import MockAdapter from "axios-mock-adapter";
+import { sampleResults } from "./fixtures";
+import { axiosInstance } from "./axios";
+
+const axiosMock = new MockAdapter(axiosInstance);
 
 describe("<AppBar/>", () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+    axiosMock.reset();
+  });
+
   it("should render", async () => {
     render(
       <AppWrapper
@@ -13,6 +25,7 @@ describe("<AppBar/>", () => {
             query: "",
             error: null,
             loading: false,
+            pageNumber: 0,
           },
         }}
       >
@@ -35,6 +48,7 @@ describe("<AppBar/>", () => {
             query: expectedQuery,
             error: null,
             loading: false,
+            pageNumber: 0,
           },
         }}
       >
@@ -57,6 +71,7 @@ describe("<AppBar/>", () => {
             query: expectedQuery,
             error: null,
             loading: true,
+            pageNumber: 0,
           },
         }}
       >
@@ -79,6 +94,7 @@ describe("<AppBar/>", () => {
             query: expectedQuery,
             error: null,
             loading: false,
+            pageNumber: 0,
           },
         }}
       >
@@ -89,5 +105,38 @@ describe("<AppBar/>", () => {
     const loadingIcon = screen.queryByRole("progressbar");
 
     expect(loadingIcon).not.toBeInTheDocument();
+  });
+
+  it("should change search input when typing", async () => {
+    const expectedQuery = "some query";
+    const expectedResults = sampleResults.slice(0, 10);
+
+    axiosMock
+      .onGet(getSearchUrl(expectedQuery, 0))
+      .replyOnce(200, { results: expectedResults });
+
+    render(
+      <AppWrapper
+        initialState={{
+          search: {
+            results: [],
+            query: expectedQuery,
+            error: null,
+            loading: false,
+            pageNumber: 0,
+          },
+        }}
+      >
+        <AppBar />
+      </AppWrapper>
+    );
+
+    const input = await screen.findByLabelText("search");
+
+    const expectedInput = "!";
+
+    userEvent.type(input, expectedInput);
+
+    expect(input).toHaveValue(expectedQuery + expectedInput);
   });
 });

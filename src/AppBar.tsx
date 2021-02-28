@@ -1,3 +1,9 @@
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchSearchResults, setSearchQuery } from "./actions";
+import { useBouncedCallback } from "./hooks";
+import { SearchDispatch } from "./reducers";
+import { loadingSelector, searchQuerySelector } from "./selectors";
 import {
   AppBar as CoreAppBar,
   Box,
@@ -6,11 +12,6 @@ import {
   makeStyles,
   Toolbar,
 } from "@material-ui/core";
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchSearchResuls, setSearchQuery } from "./actions";
-import { SearchDispatch } from "./reducers";
-import { searchQuerySelector, loadingSelector } from "./selectors";
 
 const useStyles = makeStyles({
   root: {
@@ -22,19 +23,22 @@ const AppBar = () => {
   const query = useSelector(searchQuerySelector);
   const loading = useSelector(loadingSelector);
   const dispatch: SearchDispatch = useDispatch();
-
   const classes = useStyles();
+  const debouncedHandler = (newValue: string) => {
+    dispatch(fetchSearchResults(newValue));
+  };
+  const setValue = useBouncedCallback<string>(debouncedHandler);
 
   return (
     <CoreAppBar position="fixed" role="navigation">
       <Toolbar>
         <InputBase
           className={classes.root}
-          placeholder="Enter search query about an artist, album or song here..."
+          placeholder="Enter a search query about an artist, album or song here..."
           inputProps={{ "aria-label": "search" }}
           onChange={(event) => {
             dispatch(setSearchQuery(event.target.value));
-            dispatch(fetchSearchResuls(event.target.value));
+            setValue(event.target.value);
           }}
           value={query}
         />

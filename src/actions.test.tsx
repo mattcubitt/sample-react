@@ -1,16 +1,12 @@
-import { fetchSearchResuls, getSearchUrl } from "./actions";
+import { fetchSearchResults, getSearchUrl } from "./actions";
 import MockAdapter from "axios-mock-adapter";
 import { axiosInstance } from "./axios";
 import { sampleResults } from "./fixtures";
 
-jest.mock("lodash.debounce", () => (fn: Function) => {
-  return (...args: any[]) => fn(...args);
-});
-
 const axiosMock = new MockAdapter(axiosInstance);
 
 describe("actions", () => {
-  describe("fetchSearchResuls", () => {
+  describe("fetchSearchResults", () => {
     afterEach(() => {
       jest.resetAllMocks();
       axiosMock.reset();
@@ -22,10 +18,10 @@ describe("actions", () => {
       const expectedResults = sampleResults.slice(0, 10);
 
       axiosMock
-        .onGet(getSearchUrl(expectedQuery))
+        .onGet(getSearchUrl(expectedQuery, 0))
         .replyOnce(200, { results: expectedResults });
 
-      await fetchSearchResuls(expectedQuery)(mockDispatch);
+      await fetchSearchResults(expectedQuery, 0)(mockDispatch);
 
       expect(mockDispatch.mock.calls).toHaveLength(3);
       expect(mockDispatch).toBeCalledWith({
@@ -49,10 +45,10 @@ describe("actions", () => {
       const expectedQuery = "some query";
 
       axiosMock
-        .onGet(getSearchUrl(expectedQuery))
+        .onGet(getSearchUrl(expectedQuery, 0))
         .replyOnce(500, { results: [] });
 
-      await fetchSearchResuls(expectedQuery)(mockDispatch);
+      await fetchSearchResults(expectedQuery, 0)(mockDispatch);
 
       expect(mockDispatch.mock.calls).toHaveLength(3);
       expect(mockDispatch).toBeCalledWith({

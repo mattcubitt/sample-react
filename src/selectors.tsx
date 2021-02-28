@@ -15,3 +15,7 @@ export const errorSelector = (state: State) => {
 export const loadingSelector = (state: State) => {
   return state.search.loading;
 };
+
+export const pageNumberSelector = (state: State) => {
+  return state.search.pageNumber;
+};
