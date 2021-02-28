@@ -31,6 +31,7 @@ export const fetchSearchResults = (
 
     try {
       const response = await axiosInstance.get(getSearchUrl(query, pageNumber));
+
       if (append) {
         dispatch({
           type: "SEARCH/APPEND_SEARCH_RESULTS" as const,

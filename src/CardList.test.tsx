@@ -12,6 +12,14 @@ import { getIsScrollbarVisible, getIsScrollbarAtBottom } from "./utils";
 const axiosMock = new MockAdapter(axiosInstance);
 
 jest.mock("./utils");
+jest.mock("./DelayMount", () => {
+  const mockComponent: React.FC = ({ children }) => <div>{children}</div>;
+
+  return {
+    __esModule: true,
+    default: mockComponent,
+  };
+});
 
 describe("<CardList/>", () => {
   let orginalWindow: Window & typeof globalThis;
@@ -165,5 +173,32 @@ describe("<CardList/>", () => {
         expectedResults1.length + expectedResults2.length
       );
     });
+  });
+
+  it("should render empty message query string returns no results", async () => {
+    const expectedMessage1 = "No results for that search.";
+    const expectedMessage2 = "Please try again.";
+
+    render(
+      <AppWrapper
+        initialState={{
+          search: {
+            results: [],
+            query: "some query",
+            error: null,
+            loading: false,
+            pageNumber: 0,
+          },
+        }}
+      >
+        <CardList />
+      </AppWrapper>
+    );
+
+    const actualMessage1 = await screen.findByText(expectedMessage1);
+    expect(actualMessage1).toHaveTextContent(expectedMessage1);
+
+    const actualMessage2 = await screen.findByText(expectedMessage2);
+    expect(actualMessage2).toHaveTextContent(expectedMessage2);
   });
 });

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchSearchResults, setSearchQuery } from "./actions";
 import { useBouncedCallback } from "./hooks";
 import { SearchDispatch } from "./reducers";
-import { loadingSelector, searchQuerySelector } from "./selectors";
 import {
   AppBar as CoreAppBar,
   Box,
@@ -12,6 +11,8 @@ import {
   makeStyles,
   Toolbar,
 } from "@material-ui/core";
+import { searchSelector } from "./selectors";
+import DelayMount from "./DelayMount";
 
 const useStyles = makeStyles({
   root: {
@@ -20,12 +21,13 @@ const useStyles = makeStyles({
 });
 
 const AppBar = () => {
-  const query = useSelector(searchQuerySelector);
-  const loading = useSelector(loadingSelector);
+  const { query, loading } = useSelector(searchSelector);
   const dispatch: SearchDispatch = useDispatch();
   const classes = useStyles();
   const debouncedHandler = (newValue: string) => {
     dispatch(fetchSearchResults(newValue));
+
+    document.documentElement.scrollTop = 0;
   };
   const setValue = useBouncedCallback<string>(debouncedHandler);
 
@@ -44,7 +46,9 @@ const AppBar = () => {
         />
         {loading && (
           <Box ml="auto">
-            <CircularProgress color="secondary" size={30} />
+            <DelayMount>
+              <CircularProgress color="secondary" size={30} />
+            </DelayMount>
           </Box>
         )}
       </Toolbar>

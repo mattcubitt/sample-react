@@ -8,6 +8,15 @@ import MockAdapter from "axios-mock-adapter";
 import { sampleResults } from "./fixtures";
 import { axiosInstance } from "./axios";
 
+jest.mock("./DelayMount", () => {
+  const mockComponent: React.FC = ({ children }) => <div>{children}</div>;
+
+  return {
+    __esModule: true,
+    default: mockComponent,
+  };
+});
+
 const axiosMock = new MockAdapter(axiosInstance);
 
 describe("<AppBar/>", () => {
